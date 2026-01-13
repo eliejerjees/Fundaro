@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AddExpenseModal from "@/components/AddExpenseModal";
 import EditExpenseModal from "@/components/EditExpenseModal";
+import ViewReceiptButton from "@/components/ViewReceiptButton";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ type ExpenseRow = {
   vendor: string;
   category: string;
   description: string | null;
+  receipt_path: string | null;
   expense_funding_lines: {
     id: string;
     funding_source_id: string;
@@ -91,6 +93,7 @@ export default async function ExpensesPage(props: {
       vendor,
       category,
       description,
+      receipt_path,
       expense_funding_lines (
         id,
         funding_source_id,
@@ -197,6 +200,7 @@ export default async function ExpensesPage(props: {
               <th className="p-3">Vendor</th>
               <th className="p-3">Category</th>
               <th className="p-3">Description</th>
+              <th className="p-3">Receipt</th>
               <th className="p-3">Edit</th>
             </tr>
           </thead>
@@ -211,6 +215,13 @@ export default async function ExpensesPage(props: {
                   {e.description ?? "—"}
                 </td>
                 <td className="p-3">
+                  {e.receipt_path ? (
+                    <ViewReceiptButton receiptPath={e.receipt_path} />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">None</span>
+                  )}
+                </td>
+                <td className="p-3">
                   <EditExpenseModal
                     clubId={clubId}
                     expense={e}
@@ -222,7 +233,7 @@ export default async function ExpensesPage(props: {
 
             {(expenses?.length ?? 0) === 0 && (
               <tr>
-                <td className="p-6 text-muted-foreground" colSpan={5}>
+                <td className="p-6 text-muted-foreground" colSpan={6}>
                   No expenses yet.
                 </td>
               </tr>
