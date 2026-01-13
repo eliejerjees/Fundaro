@@ -35,33 +35,30 @@ export default async function ClubsPage() {
   const rows = (memberships ?? []) as MembershipRow[];
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">{club.name}</h1>
-        <div className="text-sm text-muted-foreground">
-          {activeYear
-            ? `Active year: ${activeYear.label} (${activeYear.start_date} → ${activeYear.end_date})`
-            : "No year yet"}
-        </div>
+    <div className="p-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Your Clubs</h1>
+        <form action="/auth/sign-out" method="post">
+          <button className="rounded-md border px-3 py-2">Sign out</button>
+        </form>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-2xl border p-6">
-          <div className="text-sm text-muted-foreground">Total Budget</div>
-          <div className="text-2xl font-semibold">
-            ${totalBudget.toFixed(2)}
-          </div>
-        </div>
+        {rows.map((m, idx) => {
+          const club = firstClub(m.clubs);
+          if (!club) return null;
 
-        <div className="rounded-2xl border p-6">
-          <div className="text-sm text-muted-foreground">Spent</div>
-          <div className="text-2xl font-semibold">${spent.toFixed(2)}</div>
-        </div>
-
-        <div className="rounded-2xl border p-6">
-          <div className="text-sm text-muted-foreground">Remaining</div>
-          <div className="text-2xl font-semibold">${remaining.toFixed(2)}</div>
-        </div>
+          return (
+            <Link
+              key={`${club.id}-${idx}`}
+              href={`/clubs/${club.id}`}
+              className="rounded-2xl border p-6 hover:bg-muted/50 transition"
+            >
+              <div className="font-medium">{club.name}</div>
+              <div className="text-sm text-muted-foreground">{m.role}</div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

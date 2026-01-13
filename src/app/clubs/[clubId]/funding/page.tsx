@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import SetAllocationModal from "@/components/SetAllocationModal";
+import AddFundingSourceModal from "@/components/AddFundingSourceModal";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +109,8 @@ export default async function ClubPage(props: {
               </button>
             </form>
           )}
+
+          <AddFundingSourceModal clubId={clubId} />
         </div>
       </div>
 
@@ -138,6 +142,7 @@ export default async function ClubPage(props: {
               <th className="p-3">Spent</th>
               <th className="p-3">Remaining</th>
               <th className="p-3">Notes</th>
+              <th className="p-3">Edit</th>
             </tr>
           </thead>
           <tbody>
@@ -152,8 +157,15 @@ export default async function ClubPage(props: {
                   <td className="p-3">${allocated.toFixed(2)}</td>
                   <td className="p-3">${spent.toFixed(2)}</td>
                   <td className="p-3">${remaining.toFixed(2)}</td>
-                  <td className="p-3 text-muted-foreground">
-                    {s.notes ?? "—"}
+                  <td className="p-3 text-muted-foreground">{s.notes ?? "—"}</td>
+                  <td className="p-3">
+                    <SetAllocationModal
+                      clubId={clubId}
+                      clubYearId={activeYear.id}
+                      fundingSourceId={s.id}
+                      fundingSourceName={s.name}
+                      currentAllocated={allocated}
+                    />
                   </td>
                 </tr>
               );
@@ -161,7 +173,7 @@ export default async function ClubPage(props: {
 
             {(sources?.length ?? 0) === 0 && (
               <tr>
-                <td className="p-6 text-muted-foreground" colSpan={5}>
+                <td className="p-6 text-muted-foreground" colSpan={6}>
                   No funding sources yet.
                 </td>
               </tr>

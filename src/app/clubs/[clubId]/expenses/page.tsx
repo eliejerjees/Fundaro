@@ -3,6 +3,7 @@ export const revalidate = 0;
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AddExpenseModal from "@/components/AddExpenseModal";
+import EditExpenseModal from "@/components/EditExpenseModal";
 
 export const dynamic = "force-dynamic";
 
@@ -104,6 +105,7 @@ export default async function ExpensesPage(props: {
               <th className="p-3">Vendor</th>
               <th className="p-3">Category</th>
               <th className="p-3">Description</th>
+              <th className="p-3">Edit</th>
             </tr>
           </thead>
           <tbody>
@@ -115,11 +117,14 @@ export default async function ExpensesPage(props: {
                 <td className="p-3 text-muted-foreground">
                   {e.description ?? "—"}
                 </td>
+                <td className="p-3">
+                  <EditExpenseModal expense={e} clubId={clubId} />
+                </td>
               </tr>
             ))}
             {(expenses?.length ?? 0) === 0 && (
               <tr>
-                <td className="p-6 text-muted-foreground" colSpan={4}>
+                <td className="p-6 text-muted-foreground" colSpan={5}>
                   No expenses yet.
                 </td>
               </tr>
