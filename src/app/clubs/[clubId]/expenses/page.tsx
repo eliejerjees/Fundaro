@@ -51,6 +51,17 @@ export default async function ExpensesPage(props: {
 
   if (error) return <pre>{error.message}</pre>;
 
+  const { data: allocs } = await supabase
+    .from("funding_allocations")
+    .select("funding_source_id, amount")
+    .eq("club_year_id", activeYear.id)
+    .eq("term", "year");
+
+  const { data: spentLines } = await supabase
+    .from("expense_funding_lines")
+    .select("funding_source_id, amount")
+    .eq("club_year_id", activeYear.id);
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -58,9 +69,7 @@ export default async function ExpensesPage(props: {
           <h1 className="text-2xl font-semibold">Expenses</h1>
           <div className="flex flex-wrap items-center gap-3">
             <div className="text-sm text-muted-foreground">
-              {activeYear
-                ? `Showing: ${activeYear.label}`
-                : "No year yet"}
+              {activeYear ? `Showing: ${activeYear.label}` : "No year yet"}
             </div>
 
             {years && years.length > 0 && (
@@ -84,10 +93,7 @@ export default async function ExpensesPage(props: {
           </div>
         </div>
 
-        <AddExpenseModal
-          clubId={clubId}
-          sources={sources ?? []}
-        />
+        <AddExpenseModal clubId={clubId} sources={sources ?? []} />
       </div>
 
       <div className="rounded-2xl border overflow-hidden">

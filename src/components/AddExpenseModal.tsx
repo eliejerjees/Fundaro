@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/browser";
 type FundingSource = {
   id: string;
   name: string;
+  remaining: number;
 };
 
 type Line = {
@@ -227,7 +228,7 @@ export default function AddExpenseModal({ clubId, sources }: Props) {
                     >
                       {sources.map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.name}
+                          {s.name} (Remaining: ${s.remaining.toFixed(2)})
                         </option>
                       ))}
                     </select>

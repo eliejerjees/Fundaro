@@ -139,9 +139,7 @@ export default async function ClubPage(props: {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="rounded-2xl border p-6">
           <div className="text-sm text-muted-foreground">Total Budget</div>
-          <div className="text-2xl font-semibold">
-            ${totalBudget.toFixed(2)}
-          </div>
+          <div className="text-2xl font-semibold">${totalBudget.toFixed(2)}</div>
         </div>
 
         <div className="rounded-2xl border p-6">
