@@ -1,5 +1,8 @@
+export const revalidate = 0;
+
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import AddExpenseModal from "@/components/AddExpenseModal";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +25,14 @@ export default async function ExpensesPage(props: {
 
   const activeYear = years?.[0] ?? null;
 
+  const { data: sources, error: sourcesErr } = await supabase
+    .from("funding_sources")
+    .select("id, name")
+    .eq("club_id", clubId)
+    .order("name", { ascending: true });
+
+  if (sourcesErr) return <pre>{sourcesErr.message}</pre>;
+
   if (!activeYear) {
     return <div>No year set yet.</div>;
   }
@@ -36,9 +47,17 @@ export default async function ExpensesPage(props: {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Expenses</h1>
-        <div className="text-sm text-muted-foreground">{activeYear.label}</div>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Expenses</h1>
+          <div className="text-sm text-muted-foreground">{activeYear.label}</div>
+        </div>
+
+        <AddExpenseModal
+          clubId={clubId}
+          clubYearId={activeYear.id}
+          sources={sources ?? []}
+        />
       </div>
 
       <div className="rounded-2xl border overflow-hidden">
