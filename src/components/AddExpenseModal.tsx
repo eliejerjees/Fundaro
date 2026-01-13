@@ -20,6 +20,18 @@ type Props = {
   sources: FundingSource[];
 };
 
+function safeExt(file: File) {
+  // prefer MIME -> extension mapping, fallback to filename
+  const mime = file.type?.toLowerCase();
+  if (mime === "application/pdf") return "pdf";
+  if (mime === "image/png") return "png";
+  if (mime === "image/jpeg") return "jpg";
+  if (mime === "image/webp") return "webp";
+  const name = file.name.toLowerCase();
+  const idx = name.lastIndexOf(".");
+  return idx >= 0 ? name.slice(idx + 1) : "bin";
+}
+
 export default function AddExpenseModal({ clubId, sources }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -35,6 +47,9 @@ export default function AddExpenseModal({ clubId, sources }: Props) {
     { funding_source_id: sources[0]?.id ?? "", amount: "" },
   ]);
 
+  // receipt state
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +64,7 @@ export default function AddExpenseModal({ clubId, sources }: Props) {
       setCategory("Other");
       setDescription("");
       setLines([{ funding_source_id: sources[0]?.id ?? "", amount: "" }]);
+      setReceiptFile(null);
       setError(null);
       setLoading(false);
     }
@@ -77,8 +93,6 @@ export default function AddExpenseModal({ clubId, sources }: Props) {
     if (!vendor.trim()) return setError("Vendor is required.");
     if (!occurredOn) return setError("Date is required.");
     if (sources.length === 0) return setError("Add a funding source first.");
-
-    // validate lines
     if (lines.length === 0) return setError("Add at least one funding line.");
 
     const normalized = lines.map((l) => ({
@@ -92,7 +106,6 @@ export default function AddExpenseModal({ clubId, sources }: Props) {
         return setError("Every line amount must be > 0.");
     }
 
-    // prevent duplicate sources in one expense (optional but recommended)
     const seen = new Set<string>();
     for (const l of normalized) {
       if (seen.has(l.funding_source_id))
@@ -100,10 +113,31 @@ export default function AddExpenseModal({ clubId, sources }: Props) {
       seen.add(l.funding_source_id);
     }
 
+    // optional: validate receipt type/size
+    if (receiptFile) {
+      const okTypes = [
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+        "image/webp",
+      ];
+      if (!okTypes.includes(receiptFile.type)) {
+        return setError("Receipt must be PDF, PNG, JPG, or WEBP.");
+      }
+      const maxBytes = 10 * 1024 * 1024; // 10MB
+      if (receiptFile.size > maxBytes) {
+        return setError("Receipt is too large (max 10MB).");
+      }
+    }
+
     setLoading(true);
 
     try {
-      const { error: rpcErr } = await supabase.rpc(
+      /**
+       * IMPORTANT:
+       * This RPC must return the created expense id as a UUID string.
+       */
+      const { data: expenseId, error: rpcErr } = await supabase.rpc(
         "create_expense_with_lines_auto_year",
         {
           p_club_id: clubId,
@@ -116,6 +150,41 @@ export default function AddExpenseModal({ clubId, sources }: Props) {
       );
 
       if (rpcErr) throw new Error(rpcErr.message);
+
+      console.log("SUPABASE_URL", process.env.NEXT_PUBLIC_SUPABASE_URL);
+
+      if (!expenseId) {
+        // You can still create expenses without receipts, but receipt upload needs the id.
+        if (receiptFile) {
+          throw new Error(
+            "Expense created but receipt upload needs expense id. Update the RPC to return the id."
+          );
+        }
+      }
+
+      // upload receipt (optional)
+      if (receiptFile && expenseId) {
+        const ext = safeExt(receiptFile);
+        const path = `${clubId}/${expenseId}/${crypto.randomUUID()}.${ext}`;
+
+        const upRes = await supabase.storage
+          .from("receipts")
+          .upload(path, receiptFile, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: receiptFile.type || undefined,
+          });
+
+        if (upRes.error) throw new Error(upRes.error.message);
+
+        // write path onto expense
+        const { error: updErr } = await supabase
+          .from("expenses")
+          .update({ receipt_path: path })
+          .eq("id", expenseId);
+
+        if (updErr) throw new Error(updErr.message);
+      }
 
       setOpen(false);
       router.refresh();
@@ -197,6 +266,30 @@ export default function AddExpenseModal({ clubId, sources }: Props) {
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                   placeholder="Snacks for meeting"
                 />
+              </div>
+
+              {/* Receipt upload */}
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm">Receipt (optional)</label>
+                <input
+                  type="file"
+                  accept="application/pdf,image/png,image/jpeg,image/webp"
+                  onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+                {receiptFile && (
+                  <div className="text-xs text-muted-foreground">
+                    Selected: {receiptFile.name} ({Math.round(receiptFile.size / 1024)} KB)
+                    <button
+                      type="button"
+                      onClick={() => setReceiptFile(null)}
+                      className="ml-2 underline"
+                      disabled={loading}
+                    >
+                      remove
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -59,8 +59,6 @@ export default function EditExpenseModal({
   const [splitLoading, setSplitLoading] = useState(false);
   const [splitError, setSplitError] = useState<string | null>(null);
 
-  // delete confirm
-  const [confirmText, setConfirmText] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -175,8 +173,8 @@ export default function EditExpenseModal({
   async function onDelete() {
     setDeleteError(null);
 
-    if (confirmText.trim().toLowerCase() !== "delete") {
-      return setDeleteError('Type "delete" to confirm.');
+    if (!window.confirm("Delete this expense? This cannot be undone.")) {
+      return;
     }
 
     setDeleteLoading(true);
@@ -398,19 +396,6 @@ export default function EditExpenseModal({
                 <div className="text-sm font-semibold text-red-500">Danger zone</div>
                 <div className="mt-1 text-xs text-muted-foreground">
                   This permanently deletes the expense and its funding lines.
-                </div>
-
-                <div className="mt-3 space-y-2">
-                  <label className="text-xs text-muted-foreground">
-                    Type <span className="font-medium">delete</span> to confirm
-                  </label>
-                  <input
-                    className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                    value={confirmText}
-                    onChange={(e) => setConfirmText(e.target.value)}
-                    placeholder="delete"
-                    disabled={isBusy()}
-                  />
                 </div>
 
                 {deleteError && (

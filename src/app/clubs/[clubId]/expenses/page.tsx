@@ -175,10 +175,18 @@ export default async function ExpensesPage(props: {
           </div>
         </div>
 
-        <AddExpenseModal
-          clubId={clubId}
-          sources={sourcesWithRemaining}
-        />
+        <div className="flex items-center gap-2">
+          <a
+            className="rounded-md border px-3 py-2 text-sm"
+            href={`/api/clubs/${clubId}/expenses.csv?year=${activeYear.id}`}
+          >
+            Export CSV
+          </a>
+          <AddExpenseModal
+            clubId={clubId}
+            sources={sourcesWithRemaining}
+          />
+        </div>
       </div>
 
       <div className="rounded-2xl border overflow-hidden">
