@@ -63,6 +63,31 @@ export default async function ExpensesPage(props: {
     .select("funding_source_id, amount")
     .eq("club_year_id", activeYear.id);
 
+  const allocBySource = new Map<string, number>();
+  for (const a of allocs ?? []) {
+    allocBySource.set(
+      a.funding_source_id,
+      (allocBySource.get(a.funding_source_id) ?? 0) + (a.amount ?? 0)
+    );
+  }
+
+  const spentBySource = new Map<string, number>();
+  for (const l of spentLines ?? []) {
+    spentBySource.set(
+      l.funding_source_id,
+      (spentBySource.get(l.funding_source_id) ?? 0) + (l.amount ?? 0)
+    );
+  }
+
+  const sourcesWithRemaining = (sources ?? []).map((s) => {
+    const allocated = allocBySource.get(s.id) ?? 0;
+    const spent = spentBySource.get(s.id) ?? 0;
+    return {
+      ...s,
+      remaining: allocated - spent,
+    };
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -94,7 +119,7 @@ export default async function ExpensesPage(props: {
           </div>
         </div>
 
-        <AddExpenseModal clubId={clubId} sources={sources ?? []} />
+        <AddExpenseModal clubId={clubId} sources={sourcesWithRemaining} />
       </div>
 
       <div className="rounded-2xl border overflow-hidden">

@@ -228,7 +228,11 @@ export default function AddExpenseModal({ clubId, sources }: Props) {
                     >
                       {sources.map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.name} (Remaining: ${s.remaining.toFixed(2)})
+                          {`${s.name} (Remaining: $${
+                            Number.isFinite(s.remaining)
+                              ? s.remaining.toFixed(2)
+                              : "0.00"
+                          })`}
                         </option>
                       ))}
                     </select>
