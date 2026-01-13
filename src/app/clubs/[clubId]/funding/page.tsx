@@ -3,10 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function FundingPage(props: {
+export default async function ClubPage(props: {
   params: Promise<{ clubId: string }>;
+  searchParams?: Promise<{ year?: string }>;
 }) {
   const { clubId } = await props.params;
+  const sp = (await props.searchParams) ?? {};
+  const selectedYearId = sp.year ?? null;
 
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -22,7 +25,11 @@ export default async function FundingPage(props: {
 
   if (yearsErr) return <pre>{yearsErr.message}</pre>;
 
-  const activeYear = years?.[0] ?? null;
+  let activeYear = years?.[0] ?? null;
+
+  if (selectedYearId && years?.some((y) => y.id === selectedYearId)) {
+    activeYear = years.find((y) => y.id === selectedYearId) ?? activeYear;
+  }
   if (!activeYear) return <div>No year set yet.</div>;
 
   // funding sources
@@ -58,6 +65,33 @@ export default async function FundingPage(props: {
       <div>
         <h1 className="text-2xl font-semibold">Funding</h1>
         <div className="text-sm text-muted-foreground">{activeYear.label}</div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="text-sm text-muted-foreground">
+          {activeYear
+            ? `Showing: ${activeYear.label}`
+            : "No year yet"}
+        </div>
+
+        {years && years.length > 0 && (
+          <form action="" method="get">
+            <select
+              name="year"
+              defaultValue={activeYear?.id ?? ""}
+              className="rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              {years.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.label}
+                </option>
+              ))}
+            </select>
+            <button className="ml-2 rounded-md border px-3 py-2 text-sm">
+              Go
+            </button>
+          </form>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
