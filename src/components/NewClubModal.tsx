@@ -31,6 +31,7 @@ export default function NewClubModal() {
   const [fundingSources, setFundingSources] = useState<FundingDraft[]>([
     { name: "ATC", allocation: "" },
     { name: "Membership Dues", allocation: "" },
+  ]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
