@@ -151,7 +151,7 @@ const FundaroLanding: React.FC = () => {
                 </div>
                 <div className="text-left">
                   <div className="text-gray-500 text-sm mb-2">spent</div>
-                  <div className="text-3xl font-bold">$7.2k</div>
+                  <div className="text-3xl font-bold">$7.3k</div>
                   <div className="text-blue-400 text-sm mt-1">this month</div>
                 </div>
                 <div className="text-left">
